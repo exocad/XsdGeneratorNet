@@ -1,0 +1,19 @@
+<Project>
+	<PropertyGroup>
+		<ProductName>XSD Generator</ProductName>
+		<ProductVersion>0.0.1</ProductVersion>
+		<AssemblyVersion>$(ProductVersion)</AssemblyVersion>
+		<Copyright>exocad GmbH</Copyright>
+		<Authors>exocad GmbH</Authors>
+		<Company>exocad GmbH</Company>
+
+		<PackageProjectUrl>https://github.com/exocad/XsdGeneratorNet</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/exocad/XsdGeneratorNet</RepositoryUrl>
+
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+
+		<TargetFrameworks>net6.0-windows</TargetFrameworks>
+		<UseArtifactsOutput>true</UseArtifactsOutput>
+	</PropertyGroup>
+</Project>
