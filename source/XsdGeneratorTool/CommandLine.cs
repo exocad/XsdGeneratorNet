@@ -4,8 +4,18 @@ using XsdGenerator;
 
 namespace XsdGeneratorTool;
 
+/// <summary>
+/// The <see cref="CommandLine"/> class provides the options that were passed on application start.
+/// </summary>
 internal sealed class CommandLine
 {
+    /// <summary>
+    /// Parses the command line arguments and creates an instance of the <see cref="CommandLine"/>
+    /// class from it.
+    /// </summary>
+    /// <param name="args">The command line arguments.</param>
+    /// <param name="writeLine">The callback to use when writing log messages.</param>
+    /// <returns>A <see cref="CommandLine"/> instance that was created from the command line arguments.</returns>
     public static CommandLine Parse(string[] args, WriteLine writeLine)
     {
         var assemblies = new List<string>();
@@ -42,15 +52,33 @@ internal sealed class CommandLine
         };
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the help should be displayed. If set, no other
+    /// operations will be executed.
+    /// </summary>
     public bool ShowHelp { get; init; }
 
+    /// <summary>
+    /// Gets a value indicating whether the XML schema validation shall be skipped.
+    /// </summary>
     public bool SkipSchemaValidation { get; init; }
 
+    /// <summary>
+    /// Gets the output directory for the generated XSD files.
+    /// </summary>
     public string OutputDirectory { get; init; } = null!;
 
+    /// <summary>
+    /// Gets the paths of the .NET assemblies to load and to export types from.
+    /// </summary>
     public IReadOnlyList<string> AssemblyPaths { get; }
 
+    /// <summary>
+    /// Gets the type names to export.
+    /// </summary>
     public IReadOnlyList<string> TypeNames { get; }
+
+    private CommandLine(IReadOnlyList<string> assemblyPaths, IReadOnlyList<string> typeNames) => (AssemblyPaths, TypeNames) = (assemblyPaths, typeNames);
 
     private static bool IsHelpArg(string arg)
     {
@@ -64,8 +92,6 @@ internal sealed class CommandLine
         return arg.Equals("/skip-validation", StringComparison.InvariantCultureIgnoreCase)
             || arg.Equals("--skip-validation", StringComparison.InvariantCultureIgnoreCase);
     }
-
-    private CommandLine(IReadOnlyList<string> assemblyPaths, IReadOnlyList<string> typeNames) => (AssemblyPaths, TypeNames) = (assemblyPaths, typeNames);
 
     private static bool TryGetOptionValue(string[] names, string[] args, int index, WriteLine writeLine, out string value)
     {
