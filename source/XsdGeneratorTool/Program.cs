@@ -4,7 +4,7 @@ using XsdGenerator;
 
 namespace XsdGeneratorTool
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
@@ -43,15 +43,15 @@ namespace XsdGeneratorTool
                 Console.WriteLine();
                 Console.WriteLine("The following files were written:");
 
-                foreach (var export in result.ExportedItems)
+                foreach (var exportedSchema in result.ExportedSchemas)
                 {
-                    if (export.Type is { } type)
+                    if (exportedSchema.Type is { } type)
                     {
-                        Console.WriteLine($"- {export.Filename} for type {type.FullName}");
+                        Console.WriteLine($"- {exportedSchema.Filename} for type {type.FullName}");
                     }
                     else
                     {
-                        Console.WriteLine($"- {export.Filename}");
+                        Console.WriteLine($"- {exportedSchema.Filename}");
                     }
                 }
             }

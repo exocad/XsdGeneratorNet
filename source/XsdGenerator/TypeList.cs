@@ -4,11 +4,27 @@ using System.Reflection;
 
 namespace XsdGenerator;
 
+/// <summary>
+/// The <see cref="TypeList"/> class is responsible for loading an assembly and locating the types to export.
+/// </summary>
 internal sealed class TypeList
 {
     private readonly WriteLine _writeLine;
     private readonly StringComparison _stringComparison;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TypeList"/> class.
+    /// </summary>
+    /// <param name="assemblyPath">
+    /// The path to the assembly to load and to export types from.
+    /// </param>
+    /// <param name="typeNames">
+    /// A list of typenames to export. Appending a <c>.*</c> to a typename will include all types
+    /// whose full name starts with the given string.
+    /// </param>
+    /// <param name="config">
+    /// The exporter configuration.
+    /// </param>
     public TypeList(string assemblyPath, IReadOnlyList<string> typeNames, XsdExporterConfig config)
     {
         _writeLine = config.WriteLine;
@@ -41,8 +57,14 @@ internal sealed class TypeList
         ExportableTypes = result;
     }
 
+    /// <summary>
+    /// Gets the corresponding assembly or <c>null</c>, if it could not be loaded.
+    /// </summary>
     public Assembly? Assembly { get; }
 
+    /// <summary>
+    /// Gets a list with the types to export.
+    /// </summary>
     public IReadOnlyList<Type> ExportableTypes { get; } = [];
 
     private void WriteLine(Priority priority, string message)

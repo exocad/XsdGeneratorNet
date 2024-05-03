@@ -1,19 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Xml.Schema;
 
 namespace XsdGenerator;
 
+/// <summary>
+/// The <see cref="XsdExporter"/> class allows generating XSD files from C# types exported from a .NET Core assembly.
+/// </summary>
 public sealed class XsdExporter
 {
     private readonly XsdExporterConfig _config;
     
-    public XsdExporter(XsdExporterConfig config)
-    {
-        _config = config;
-    }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="XsdExporterConfig"/> class.
+    /// </summary>
+    /// <param name="config">The configuration for this exporter instance. See <see cref="XsdExporterConfig"/> for details.</param>
+    public XsdExporter(XsdExporterConfig config) => _config = config;
 
+    /// <summary>
+    /// Loads the given assemblies and tries to export all types that are listed in the <paramref name="typeNames"/>
+    /// collection. Each type found will be exported to a separate XSD file.
+    /// 
+    /// Calling this method multiples times will override previously written XSD files. Consider creating a new
+    /// instance with a different output directory if multiple invocations are required.
+    /// </summary>
+    /// <param name="assemblyPaths">
+    /// The filenames of the assemblies to load.
+    /// </param>
+    /// <param name="typeNames">
+    /// The typenames to generate an XSD schema for. Appending a <c>.*</c> to a typename will include all types
+    /// whose full name starts with the given string.
+    /// </param>
+    /// <returns>
+    /// An <see cref="XsdExportResult"/> containing the paths to the generated XSD files and schema validation
+    /// warnings, if there are any.
+    /// </returns>
     public XsdExportResult ExportSchemas(IReadOnlyList<string> assemblyPaths, IReadOnlyList<string> typeNames)
     {
         var schemas = new XmlSchemaContainer();
@@ -25,42 +46,38 @@ public sealed class XsdExporter
 
             if (typeList.ExportableTypes.Count == 0)
             {
-                WriteLine(Priority.Warning, $"No exportable types were found in '{assemblyPath}'.");
+                WriteLine(Priority.Normal, $"No exportable types were found in '{assemblyPath}'.");
                 continue;
             }
 
             foreach (var type in typeList.ExportableTypes)
             {
-                schemas.GenerateMapping(type);
+                schemas.GenerateSchema(type);
             }
 
             schemas.Compile((_, e) => OnValidateSchema(result, e), fullCompile: false);
         }
 
-        for (var index = 0; index < schemas.Count; ++index)
+        foreach (var (schema, type, index) in schemas.EnumerateSchemas())
         {
-            var schema = schemas[index];
-            var filename = GetFilename(schema, index, schemas, out var type);
+            var filename = GetFilename(schema, index, schemas);
 
             using var writer = CreateTextWriter(filename);
 
-            result.AddExportedItem(filename, type);
+            WriteLine(Priority.Normal, type is not null 
+                ? $"Generating file for exported type '{type}': {filename}"
+                : $"Generating file: {filename}");
+
+            result.AddExportedSchema(filename, schema, type);
             schema.Write(writer);
         }
 
         return result;
     }
 
-    private string GetFilename(XmlSchema schema, int index, XmlSchemaContainer container, out Type? type)
+    private string GetFilename(XmlSchema schema, int index, XmlSchemaContainer container)
     {
-        var filename = $"output{index}.xsd";
-
-        if (container.TryGetAssociatedType(schema, out type))
-        {
-            WriteLine(Priority.Normal, $"Generating file for exported type '{type}': {filename}");
-        }
-
-        return filename;
+        return $"output{index}.xsd";
     }
 
     private TextWriter CreateTextWriter(string filename)
@@ -82,7 +99,7 @@ public sealed class XsdExporter
             return;
         }
 
-        result.AddViolationWarning(e.Exception);
+        result.AddValidationWarning(e.Exception);
 
         var priority = e.Severity == XmlSeverityType.Error ? Priority.Error : Priority.Warning;
 
